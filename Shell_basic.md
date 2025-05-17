@@ -296,3 +296,6 @@ esac
 - 查找 /var/log 目录下在 7 天前修改过的文件：`find /var/log -mtime +7`
 - 在当前目录下查找最近 20 天内状态发生改变的文件和目录: `# find . -ctime  20`
 
+
+
+## `$(dirname "$0")`
