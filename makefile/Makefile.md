@@ -1,16 +1,19 @@
 swpedia_keyword: [Makefile] 
 
-author:  Sam [desen.li@wisewavetech.com]
+author:  Sam[desen.li@wisewavetech.com]
 
 ------
 
 # Makefile Tutorial
 
+Reference: 
 
+- GNU make handbook ([Top (GNU make)](https://www.gnu.org/software/make/manual/html_node/index.html#SEC_Contents))
+- GNU compilers handbook ([Top (Using the GNU Compiler Collection (GCC))](https://gcc.gnu.org/onlinedocs/gcc/index.html#SEC_Contents))
 
 ## 1. Makefile 概述
 
-Makefile 是管理项目自动化构建过程的重要工具，尤其适用于中大型、有多文件的工程项目。它描述了如何编译、链接、打包等构建相关操作，也能方便地固化和复用指令。
+Makefiles 用于帮助决定一个大型程序的哪些部分需要重新编译。在大多数情况下，需要编译的只是 C 或 C++ 文件。其他语言通常有它们自己的一套与 Make 用途类似的工具。Make 的用途并不局限于编程，当你需要根据哪些文件发生了变更来运行一系列指令时也可以使用它。
 
 ### 为什么要用Makefile？
 
@@ -42,7 +45,7 @@ Makefile 文件用于描述整个工程的自动化构建规则。主要内容�
 - 每一个在上次执行 make 之后修改过的 C 源代码文件在本次执行 make 时将会被重新编译；
 - 头文件在上一次执行 make 之后被修改。则所有包含此头文件的 C 源文件在本次执行 make 时将会被重新编译。
 
-后两种情况是 make 只将修改过的 C 源文件重新编译生成.o 文件，对于没有修改的文件不进 行任何工作。重新编译过程中，任何一个源文件的修改将产生新的对应的.o 文件，新的.o 文件将和 以前的已经存在、此次没有重新编译的.o 文件重新连接生成最后的可执行程序。
+后两种情况是 make 只将修改过的 C 源文件重新编译生成.o 文件，对于没有修改的文件不进 行任何工作。重新编译过程中，任何一个源文件的修改将产生新的对应的.o 文件，新的.o 文件将和以前的已经存在、此次没有重新编译的.o 文件重新连接生成最后的可执行程序。
 
 规则包含了目标和依赖的关系以及更新目标所要求的命令。
 
@@ -51,7 +54,9 @@ Makefile 文件用于描述整个工程的自动化构建规则。主要内容�
 #### makefile 的常见组成
 
 ```makefile
-target: prerequisites
+targets: prerequisites
+<TAB>command
+<TAB>command
 <TAB>command
 ```
 
@@ -65,12 +70,12 @@ target: prerequisites
 
 - **目标（Target）** ：通常为要生成的文件或任务名。
 - **依赖（Prerequisite）** ：目标所依赖的文件或其他目标。
-- **命令（Recipe/Command）** ：为了更新目标需要执行的命令。
+- **命令（Recipes/Commands）** ：为了更新目标需要执行的命令。
 - **变量（Variables）** ：用于简化和复用。
 - **规则（Rules）** ：上述三项的组合。
 - **伪目标（Phony Target）** ：不生成实际文件，仅为执行命令。
 - **条件判断、包含指令**：提升灵活性和可维护性。
--  [隐含规则](# Makefile 隐含（示）规则)
+-  [隐含规则](# Makefile 隐式（含）规则)
 
 
 
@@ -81,6 +86,17 @@ target: prerequisites
 在Shell中输入 `make` 指令之后，make会自动读取该目录下的Makefile文件，并自动处理第一个目标里的规则。例如：
 
 ```makefile
+# ============================ Example 1 ==============================  
+blah: blah.o
+    cc blah.o -o blah # Runs third
+
+blah.o: blah.c
+    cc -c blah.c -o blah.o # Runs second
+
+blah.c:
+    echo "int main() { return 0; }" > blah.c # Runs first
+    
+# ============================ Example 2 ==============================     
 alpha beta gamma: common.c
 	gcc $@ common.c -o $@
 ......
@@ -100,11 +116,7 @@ alpha beta gamma: common.c
 
 
 
-对于 `clean` 的目标在 GUN make文档中定义不能将其作为Makefile的第一个目标，因为Makefile的初衷是创建更新程序，如果只是为了clean，编写一个shell脚本也可以实现同样的功能。
-
-
-
-Makefile的命名通常为“makefile”、“Makefile”、“GNUmakefile”（不推荐）。下达`make`指令的时候会自动查找工作目录下的上述三种命名的文件。如果makefile 文件的命名不是这三个任何一个时，需要通过 make 的`-f`或者`--file` 选项来指定 make 读取的 makefile 文件。也可以通过 多个“-f”或者“--file”选项来指定多个需要读取的makefile 文件，多个 makefile 文件将会被 按照指定的顺序进行连接并被 make 解析执行。当通过`-f`或者`--file`指定 make 读取 makefile 的文件时，make 就不再自动查找这三个标准命名的 makefile 文件。
+Makefile的命名通常为“makefile”、“Makefile”、“GNUmakefile”（不推荐）。下达`make`指令的时候会自动查找工作目录下的上述三种命名的文件。如果makefile 文件的命名不是这三个任何一个时，需要通过 make 的`-f`或者`--file` 选项来指定 make 读取的 makefile 文件。也可以通过 多个“`-f`”或者“`--file`”选项来指定多个需要读取的makefile 文件，多个 makefile 文件将会被 按照指定的顺序进行连接并被 make 解析执行。当通过`-f`或者`--file`指定 make 读取 makefile 的文件时，make 就不再自动查找这三个标准命名的 makefile 文件。
 
 
 
@@ -112,18 +124,18 @@ make命令执行后有三个退出码：
 
 * 0 —— 表示成功执行。
 * 1 —— 如果make运行时出现任何错误，其返回1。
-* 2 —— 如果你使用了make的“-q”选项，并且make使得一些目标不需要更新，那么返回2。
+* 2 —— 如果你使用了make的“`-q`”选项，并且make使得一些目标不需要更新，那么返回2。
 
 
 
-### makefile的执行过程 ：
+### makefile的执行过程
 
-阶段一：读取所有的makefile文件、以及内联的所有变量、、明确规则和隐含 规则，并建立所有目标和依赖之间的依赖关系结构链表。 
+阶段一：读取所有的makefile文件、以及内联的所有变量、明确规则和隐式规则，并建立所有目标和依赖之间的依赖关系结构链表。 
 
-阶段二：根据第一阶段已经建立的依赖关系结构链表决定哪些目标需要更新，并使用对应 的规则来重建这些目标。
+阶段二：根据第一阶段已经建立的依赖关系结构链表决定哪些目标需要更新，并使用对应的规则来重建这些目标。
 
 1. **加载文件与变量**
-   顺序读取 $MAKEFILES、当前目录下的 Makefile、被 `include` 包含的文件。
+   顺序读取 `$MAKEFILES`、当前目录下的 Makefile、被 `include` 包含的文件。
 2. **自动重建 Makefile（如必要）**
    如果定义了生成 Makefile 的规则，会优先自动重建自身。
 3. **构建依赖关系树**
@@ -143,7 +155,7 @@ make命令执行后有三个退出码：
 
 
 
-## Makefile 的规则
+## 2. Makefile 的规则
 
 命令是 shell 语句，默认 shell 为 `/bin/sh`。
 
@@ -170,11 +182,11 @@ targets : prerequisites ; command
     ...
 ```
 
-targets是文件名，以空格分开，可以使用通配符。一般来说，我们的目标基本上是一个文件，但也有可能是多个文件。
-command是命令行，如果其不与“target: prerequisites”在一行，那么，必须以[Tab键]开头，如果在同一行，那么可以用分号做为分隔。
-prerequisites也就是目标所依赖的文件（或依赖目标）。如果其中的某个文件要比目标文件要新，那么，目标就被认为是“过时的”，被认为是需要重生成的。
-如果命令太长，你可以使用反斜框（‘\’）作为换行符。make对一行上有多少个字符没有限制。规则告诉make两件事，文件的依赖关系和如何成成目标文件。
-一般来说，make会以UNIX的标准Shell，也就是`/bin/sh`来执行命令。
+- targets是文件名，以空格分开，可以使用[通配符](# 通配符)。一般来说，我们的目标基本上是一个文件，但也有可能是多个文件。
+- command是命令行，如果其不与“target: prerequisites”在一行，那么，必须以[Tab键]开头，如果在同一行，那么可以用分号做为分隔。
+- prerequisites也就是目标所依赖的文件（或依赖目标）。如果其中的某个文件要比目标文件要新，那么，目标就被认为是“过时的”，被认为是需要重生成的。
+- 如果命令太长，你可以使用反斜框（`\`）作为换行符。make对一行上有多少个字符没有限制。规则告诉make两件事，文件的依赖关系和如何成成目标文件。
+- 一般来说，make会以UNIX的标准Shell，也就是`/bin/sh`来执行命令。也可以修改变量，改成不同的shell
 
 
 
@@ -182,17 +194,25 @@ prerequisites也就是目标所依赖的文件（或依赖目标）。如果其�
 
 和bash shell类似，makefile中是可以使用通配符的，支持 `*`，`?`和`[...]` 这三个通配符，分别用于匹配任意长度的任意字符、匹配任意单个字符、匹配括号内任一单个字符
 
+- `*.c` 可以匹配 `a.c`, `b.c`等
+- `a?.c` 可以匹配 `ab.c`, `ac.c`
+- `a[12].c` 匹配 `a1.c`, `a2.c`
 
 
-**wildcard()**
 
-当尝试用通配符给变量赋值的时候，`objects = *.o` ，但此时 $objects 就是 *.o，而非所有.o文件，因此如果我们想让通配符在变量赋值时就展开，要使用 `wildcard`函数：`objects := $(wildcard *.o)`，此时就把所有的.o文件赋给了objects变量。
+makefile有一个专属的通配符 “`%`”，用于匹配目标和依赖里对应的变量部分。
+
+
+
+#### **wildcard()**
+
+当尝试用通配符给变量赋值的时候，<font color='RedOrange'>`objects = *.o`</font> ，但此时 $objects 就是 *.o，而非所有.o文件，因此如果我们想让通配符在变量赋值时就展开，要使用 `wildcard`函数：`objects := $(wildcard *.o)`，此时就把所有的.o文件赋给了objects变量。
 
 
 
 ### 伪目标
 
- 一直有提到可以用 `make clean` （当存在clean目标）来清楚编译的结果，而实际上 `clean` 是一个伪目标，不同于直接用目标作为目标名。在这里，并不生成“clean”这个文件。
+经常可以看到用 `make clean` （当存在clean目标）来清楚编译的结果，而实际上 `clean` 是一个伪目标，不同于直接用目标作为目标名。在这里，并不生成 “clean”这个文件。
 
 “伪目标”并不是一个文件，只是一个标签，由于“伪目标”不是文件，所以make无法生成它的依赖关系和决定它是否要执行。我们只有通过显示地指明这个“目标”才能让其生效。当然，“伪目标”的取名不能和文件名重名，不然其就失去了“伪目标”的意义了。所以通常要用 `.PHONY : clean` 来规避该风险。除此之外还有一些其他的[内建特殊目标名](# 内建的特殊目标名)
 
@@ -200,17 +220,17 @@ prerequisites也就是目标所依赖的文件（或依赖目标）。如果其�
 
 常用 all 伪目标把所有需要makefile执行的步骤涵盖，例如
 
-```
+```makefile
 .PHONY : all
 all : prog1 prog2 prog3 
 prog1 : prog1.o utils.o
-       cc -o prog1 prog1.o utils.o
+	cc -o prog1 prog1.o utils.o
 
 prog2 : prog2.o
-       cc -o prog2 prog2.o
+	cc -o prog2 prog2.o
 
 prog3 : prog3.o sort.o utils.o
-       cc -o prog3 prog3.o sort.o utils.o
+	cc -o prog3 prog3.o sort.o utils.o
 ```
 
 #### 常用的伪目标：
@@ -224,11 +244,15 @@ prog3 : prog3.o sort.o utils.o
 * `TAGS` - 更新所有目标，以备完整重编译
 * `check`/`test` - 测试 makefile 流程
 
+> [!IMPORTANT]
+>
+> 对于 `clean` 的目标在 GUN make文档中定义不能将其作为Makefile的第一个目标，因为Makefile的初衷是创建更新程序，如果只是为了clean，编写一个shell脚本也可以实现同样的功能。
+
 
 
 ### 多目标
 
-Makefile的规则中的目标可以不止一个，也支持多目标，有可能我们的多个目标同时依赖于一个文件，并且其生成的命令大体类似。于是我们就能把其合并起来。但是，多个目标的生成规则的执行命令是同一个，可能会引起不必要的麻烦，使用自动化变量`$@`，这个变量表示着目前规则中所有的目标的集合。例如：
+Makefile的规则中的目标可以不止一个，也支持多目标，有可能我们的多个目标同时依赖于一个文件，并且其生成的命令大体类似。于是我们就能把其合并起来。但是，多个目标的生成规则的执行命令是同一个，可能会引起不必要的麻烦，使用[自动变量](# 自动变量)`$@`，这个变量表示着目前规则中所有的目标的集合。例如：
 
 ```makefile
 bigoutput littleoutput : text.g
@@ -236,10 +260,10 @@ bigoutput littleoutput : text.g
   
 # 上述规则等价于：
  
- bigoutput : text.g
-           generate text.g -big > bigoutput
- littleoutput : text.g
-           generate text.g -little > littleoutput
+bigoutput : text.g
+	generate text.g -big > bigoutput
+littleoutput : text.g
+	generate text.g -little > littleoutput
 ```
 
 
@@ -282,7 +306,7 @@ baz.o: baz.c
 
 但是用了静态模式，写法可以更改为：
 
-```
+```makefile
 objs = foo.o bar.o baz.o
 
 $(objs): %.o : %.c
@@ -292,8 +316,10 @@ $(objs): %.o : %.c
 * `foo.o`、`bar.o`、`baz.o`就是**targets**
 * `%.o`是**目标模式**
 * `%.c`是**依赖模式**
-* `$<`表示第一个依赖，即 `foo.c`、`bar.c`等
+* `$<`表示第一个依赖，即 `foo.c`、`bar.c`等 ([自动变量](# 自动变量))
 * `$@`表示目标，即`foo.o`、`bar.o`等
+
+此外，静态模式常与函数结合使用 [静态模式规则与过滤器](# 静态模式规则与过滤器)
 
 
 
@@ -333,9 +359,11 @@ main.o: main.c defs.h config.h
 
 这样只用维护 `.c` 文件和主 Makefile，就能自动追踪依赖变化。
 
+也可以用 `-MD` 让 gcc 自动写出 xxx.d 文件，makefile 里 `include` 一下这些 .d 文件就能自动管理所有头文件依赖
 
 
-## Makefile 的命令
+
+## 3. Makefile 的命令
 
 每条规则中的命令和操作系统Shell的命令行是一致的。make会一按顺序一条一条的执行命令，每条命令的开头必须以[Tab]键开头，除非，命令是紧跟在依赖规则后面的分号后的。在命令行之间中的空格或是空行会被忽略，但是如果该空格或空行是以Tab键开头的，那么make会认为其是一个空命令。
 
@@ -389,7 +417,7 @@ exec:
 
 ```makefile
 targets：
-	-mkdir wapis_example/
+	-rm file1
 ```
 
 
@@ -429,7 +457,7 @@ foo.c: foo.y
 	mv y.tab.c foo.c
 ```
 
-[自动化变量](# 自动变量)：
+[自动变量](# 自动变量)：
 
 * `$@` ：代表规则的“目标”（如 `foo.c`）
 * `$^` ：代表规则的“所有依赖”（如 `foo.y`）
@@ -437,7 +465,7 @@ foo.c: foo.y
 
 
 
-## Makefile中的变量
+## 4. Makefile中的变量
 
 ### 定义
 
@@ -478,7 +506,7 @@ all : $(OBJ)
 
 
 
-### 高级操作
+### 变量操作
 
 - 变量的字符串操作
 
@@ -568,7 +596,7 @@ prog.o : prog.c
 
    用于指定C编译器的选项。这些选项控制编译器的行为，比如生成调试信息、优化代码或启用警告。
 
-   常见用法：
+   [常见用法](# gcc编译器选项)：
 
    * `-g`：生成调试信息，方便调试。
    * `-O2`：优化代码，提高性能。
@@ -634,7 +662,7 @@ clean:
 
 
 
-## Makefile 中的条件判断
+## 5. Makefile 中的条件判断
 
 Makefile中的条件判断类似于编程语言中的`if`语句，允许根据特定条件执行不同的定义或命令。它们在以下场景中尤为重要：
 
@@ -674,7 +702,7 @@ program: main.o
 
 
 
-## Makefile 函数
+## 6. Makefile 函数
 
 Makefile中的函数是一种强大的工具，它们能够帮助我们处理文本、文件名、条件判断等各种任务，大大增强了Makefile的灵活性和功能性。函数使得我们能够在构建过程中进行复杂的变量转换、文件操作和逻辑判断。函数在Makefile中扮演着类似编程语言中子程序的角色，但语法和使用方式有所不同。
 
@@ -700,11 +728,11 @@ ${function_name parameter1,parameter2,...}
 
 - [字符串操作函数](字符串操作函数)
 
-- [文件名操作函数](文件名操作函数)
+- [文件名操作函数](# 文件名操作函数)
 
-- [列表操作函数](列表操作函数)
+- [列表操作函数](# 列表操作函数)
 
-- [控制函数](控制函数)
+- [控制函数](# 控制函数)
 
   
 
@@ -926,9 +954,9 @@ ${function_name parameter1,parameter2,...}
 
 
 
-## Makefile 隐含（示）规则
+## 7. Makefile 隐式（含）规则
 
-隐含规则（隐示规则）是 make 工具中一种非常强大的功能，它允许我们在不显式编写某些规则的情况下，让 make 自动为我们推导出如何构建目标的方法。这些规则是"隐含的"、"约定俗成的"，即使我们在 Makefile 中没有明确写出，make 也会按照这些预设的规则来执行相应的命令。
+隐式规则（隐含规则）是 make 工具中一种非常强大的功能，它允许我们在不显式编写某些规则的情况下，让 make 自动为我们推导出如何构建目标的方法。这些规则是"隐含的"、"约定俗成的"，即使我们在 Makefile 中没有明确写出，make 也会按照这些预设的规则来执行相应的命令。
 
 简单来说，隐含规则就像是一种"默认约定"，它让我们能够编写更加简洁的 Makefile，避免重复编写一些常见的构建规则，从而提高编写效率和可维护性。
 
@@ -958,10 +986,27 @@ ${function_name parameter1,parameter2,...}
 ### 示例
 
 ```makefile
-my_program: main.o utils.o
-	gcc -o my_program main.o utils.o
+SRCS = main.c utils.c
+OBJS = main.o utils.o
 
-# 注意：这里没有写如何生成 main.o 和 utils.o
+# 编译最终可执行文件
+myapp: $(OBJS)
+	$(CC) $^ -o $@
+myapp: $(OBJ2)
+
+# 对 main.o 用显式规则
+main.o: main.c
+	echo "Compiling main.c with a custom command!"
+	gcc -c main.c -o main.o
+
+# utils.o 不写规则，会自动用隐式规则
+# 隐式规则等价于：
+# utils.o: utils.c
+#     $(CC) -c utils.c -o utils.o
+
+.PHONY: clean
+clean:
+	rm -f $(OBJS) myapp
 
 # 但是隐式规则会帮助实现这行命令
 # 这是一个隐式规则的“样子”，我们通常不需要写出来
@@ -1020,13 +1065,11 @@ my_program: main.o utils.o
 
 
 
-### 分类：后缀规则
+### 分类1：后缀规则
 
 历史上，隐式规则主要通过“**后缀规则 (Suffix Rules)** ”来定义。后缀规则基于文件的扩展名。
 
 * 定义单个后缀规则：
-
-   
 
   例如.c.o:，表示如何从一个 `.c`文件生成一个 `.o` 文件
 
@@ -1034,7 +1077,7 @@ my_program: main.o utils.o
   .c.o:
   	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
   ```
-
+  
 * `.SUFFIXES` 特殊目标：为了让 `make`知道哪些后缀是“有意义的”，需要将这些后缀添加到 `.SUFFIXES`
 
   特殊目标的依赖列表中。例如：
@@ -1043,15 +1086,13 @@ my_program: main.o utils.o
   .SUFFIXES: .o .c .cc
   ```
 
-
-
 make有一个默认的后缀列表，包含了很多常用后缀。
 
 然而，后缀规则有一些限制，例如它不能很好地处理没有后缀的文件，或者文件名中包含目录路径的情况。
 
 
 
-### 分类：模式规则
+### 分类2：模式规则
 
 因此，现代的 `make` 更推荐使用“**模式规则 (Pattern Rules)** ”，它更加灵活和强大。
 
@@ -1094,7 +1135,7 @@ make有一个默认的后缀列表，包含了很多常用后缀。
 
 4. `make -p` **查看规则数据库**
 
-   如果想知道 `make` 当前知道了哪些规则（包括所有内建的隐式规则、变量等），可以使用 `make -p` (或 `make --print-data-base`) 命令。输出会非常多，但对于理解 `make` 的内部状态非常有用。
+   如果想知道 `make` 当前知道了哪些规则（包括所有内建的隐式规则、变量等），可以使用 `make -p` (或 `make --print-data-base`) 命令。输出会非常多，但对于理解 `make` 的内部状态非常有用。（or `make -p | less`)
 
 5. **链式隐式规则**
 
@@ -1109,11 +1150,11 @@ make有一个默认的后缀列表，包含了很多常用后缀。
 
 
 
-## Makefile的一些特殊使用方法
+## 8. Makefile的一些特殊使用方法
 
 ### 包含其他makefile文件
 
-1. include
+1. **include**
 
    Makefile中包含其他文件的关键字是 `include`，使用方法：`include FILENAMES`，这里的 `FILENAMES` 是shell支持的文件名并且也可以使用通配符。
 
@@ -1121,7 +1162,7 @@ make有一个默认的后缀列表，包含了很多常用后缀。
    >
    > include行不能用[Tab] 开始
 
-2.  变量 `$MAKEFILES`
+2.  **变量 `$MAKEFILES`**
 
    可以在当前的环境定义一个环境变量 `$MAKEFILES`，make执行的时候会先读入此变量，变量可以涵盖多个Makefile文件（用空格隔开）。
 
@@ -1137,7 +1178,7 @@ make有一个默认的后缀列表，包含了很多常用后缀。
 
 **特殊使用场景**
 
-makefile不允许一个目录下或一次运行中存在相同目标的两个不同规则命令，但依赖可以。如果一个Makefile需要用到另一个Makefile 的变量和规则，可以使用 [所有匹配模式](### 所有匹配模式)，或者使用 `：`追加命令。
+**Makefile** 不允许为同一目标定义多条带有命令的普通规则，否则会报错；但可以多次为目标补充依赖，依赖会被合并。如果需要在一个 Makefile 中复用另一个 Makefile 定义的变量与规则，应使用 `include` 指令包含该文件。`::`（双冒号规则）允许为同一目标编写多条互立的规则，每条规则的命令都会被执行
 
 
 
@@ -1148,7 +1189,7 @@ makefile不允许一个目录下或一次运行中存在相同目标的两个不
 1. 设定路径
 2. 给一个路径给make，让make去寻找需要的依赖文件
 
-Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有指明这个变量，make只会在当前的目录中去找寻依赖文件和目标文件。如果定义了这个变量，那么，make就会在当当前目录找不到的情况下，到所指定的目录中去找寻文件了。例如： `VPATH = src:../headers`
+Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有指明这个变量，make只会在当前的目录中去找寻依赖文件和目标文件。如果定义了这个变量，那么，make就会在当前目录找不到的情况下，到所指定的目录中去找寻文件了。例如： `VPATH = src:../headers`
 
 此外除了设置VPATH变量，还可以使用 `vpath` 关键字，
 
@@ -1231,9 +1272,26 @@ Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有
 
 
 
+### 静态模式规则与过滤器
 
+```makefile
+obj_files = foo.result bar.o lose.o
+src_files = foo.raw bar.c lose.c
 
+.PHONY: all
+all: $(obj_files)
 
+$(filter %.o,$(obj_files)): %.o: %.c
+    echo "target: $@ prereq: $<"
+$(filter %.result,$(obj_files)): %.result: %.raw
+    echo "target: $@ prereq: $<" 
+
+%.c %.raw:
+    touch $@
+
+clean:
+    rm -f $(src_files)
+```
 
 
 
@@ -1260,7 +1318,9 @@ Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有
 
 
 
-#### 自动变量
+#### 自动变量 
+
+Source:（[Automatic Variables (GNU make)](https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html)）
 
 * `$@` ：代表目标文件名
 * `$^` ：所有的依赖文件名（去重，空格分隔）
@@ -1351,7 +1411,7 @@ Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有
 
 
 
-## 附录2：隐含规则
+## 附录2：隐示规则
 
 1. 编译C程序的隐含规则。
 
@@ -1593,7 +1653,3 @@ Makefile文件中的特殊变量`VPATH` 是用来实现方法2的，如果没有
 * `$(value variable)` - 获取变量的文本值，而不是展开后的值
 * `$(origin variable)` - 返回变量的来源（如命令行、环境变量等）
 * `$(flavor variable)` - 返回变量的赋值方式（如简单赋值、递归赋值等）
-
-### 9. 其他特殊函数
-
-* `$(guile scheme-code)` - 执行Guile扩展中的Scheme代码（如果支持）

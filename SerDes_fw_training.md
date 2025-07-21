@@ -46,3 +46,12 @@ Kernal的优先级 看启动顺序（n25f_reset.c ———extern main）
 
 
 
+
+
+ctle是把高频boost起来
+
+vga设置摆幅
+
+greycode是CDR用的
+
+tia光转电
